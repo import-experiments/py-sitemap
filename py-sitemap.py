@@ -4,20 +4,11 @@ from urllib.parse import urljoin, urlparse
 from datetime import datetime
 from database_operations import (
     create_entry, 
-    get_entry_by_id, 
     get_entries_by_url, 
     get_entries_by_visited, 
-    read_entries, 
-    update_entry, 
-    delete_entry,
     delete_all_entries, 
     close_connection
 )
-
-# Current configuration
-CURRENT_USER = "nickmoreton"
-START_TIME = "2025-02-27 21:26:50"
-START_URL = "http://localhost:8888"
 
 headers = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.3 Safari/605.1.15",
@@ -98,8 +89,6 @@ def crawl(start_url):
     3. Add new links to to_visit
     4. Continue until no more links to visit
     """
-    print(f"Starting crawl at: {START_TIME}")
-    print(f"User: {CURRENT_USER}")
     print(f"Starting URL: {start_url}")
     print("-" * 50)
     
@@ -146,5 +135,8 @@ if __name__ == "__main__":
     # Clear the database before starting
     delete_all_entries()
     
+    # Get the start URL from user input
+    start_url = input("Enter the URL to crawl: ")
+    
     # Start the crawl
-    crawl(START_URL)
+    crawl(start_url)
