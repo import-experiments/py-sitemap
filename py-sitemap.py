@@ -19,6 +19,12 @@ headers = {
     "Upgrade-Insecure-Requests": "1"
 }
 
+# Common image file extensions to filter out
+IMAGE_EXTENSIONS = {
+    '.jpg', '.jpeg', '.png', '.gif', '.bmp', 
+    '.tiff', '.webp', '.svg', '.ico', '.heic'
+}
+
 def validate_url(url, base_url):
     """
     Validate if the URL belongs to the same domain as the base URL.
@@ -38,9 +44,16 @@ def is_valid_link(url):
     Check if a URL should be visited:
     - No query parameters (?)
     - No fragments (#)
+    - Not an image file
     Returns True if the URL is valid to visit, False otherwise.
     """
-    return not ("?" in url or "#" in url)
+    if "?" in url or "#" in url:
+        return False
+        
+    # Check if the URL ends with an image extension
+    parsed_url = urlparse(url)
+    path = parsed_url.path.lower()
+    return not any(path.endswith(ext) for ext in IMAGE_EXTENSIONS)
 
 def get_links(url, base_url):
     """
@@ -71,6 +84,7 @@ def get_links(url, base_url):
             # Only add links that are:
             # 1. On the same domain
             # 2. Don't contain ? or #
+            # 3. Not image files
             if validate_url(link, base_url) and is_valid_link(link):
                 valid_links.add(link)
                 
