@@ -5,7 +5,7 @@ from datetime import datetime
 from database_operations import (
     create_entry, 
     get_entries_by_url, 
-    get_entries_by_visited, 
+    read_entries,
     delete_all_entries, 
     close_connection
 )
@@ -19,10 +19,18 @@ headers = {
     "Upgrade-Insecure-Requests": "1"
 }
 
-# Common image file extensions to filter out
-IMAGE_EXTENSIONS = {
+# File extensions to filter out
+MEDIA_EXTENSIONS = {
+    # Image files
     '.jpg', '.jpeg', '.png', '.gif', '.bmp', 
-    '.tiff', '.webp', '.svg', '.ico', '.heic'
+    '.tiff', '.webp', '.svg', '.ico', '.heic',
+    # Audio files
+    '.mp3', '.wav', '.aac', '.ogg', '.m4a',
+    '.wma', '.flac', '.opus', '.mid', '.midi',
+    # Video files
+    '.mp4', '.avi', '.mov', '.wmv', '.flv',
+    '.mkv', '.webm', '.m4v', '.mpg', '.mpeg',
+    '.3gp', '.3g2'
 }
 
 def validate_url(url, base_url):
@@ -44,16 +52,16 @@ def is_valid_link(url):
     Check if a URL should be visited:
     - No query parameters (?)
     - No fragments (#)
-    - Not an image file
+    - Not a media file (image, audio, or video)
     Returns True if the URL is valid to visit, False otherwise.
     """
     if "?" in url or "#" in url:
         return False
         
-    # Check if the URL ends with an image extension
+    # Check if the URL ends with a media file extension
     parsed_url = urlparse(url)
     path = parsed_url.path.lower()
-    return not any(path.endswith(ext) for ext in IMAGE_EXTENSIONS)
+    return not any(path.endswith(ext) for ext in MEDIA_EXTENSIONS)
 
 def get_links(url, base_url):
     """
@@ -84,7 +92,7 @@ def get_links(url, base_url):
             # Only add links that are:
             # 1. On the same domain
             # 2. Don't contain ? or #
-            # 3. Not image files
+            # 3. Not media files (images, audio, or video)
             if validate_url(link, base_url) and is_valid_link(link):
                 valid_links.add(link)
                 
@@ -136,12 +144,7 @@ def crawl(start_url):
     # Print summary
     print("\nCrawl Summary:")
     print("-" * 50)
-    print("Visited links:")
-    visited_links = get_entries_by_visited()
-    for link in visited_links:
-        print(f"- {link[1]}")
-    print(f"\nTotal URLs visited: {len(visited_links)}")
-    print(f"Crawl completed at: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Total URLs saved in database: {len(read_entries())}")
 
     close_connection()
 
