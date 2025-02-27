@@ -9,6 +9,8 @@ from database_operations import (
     delete_all_entries, 
     close_connection
 )
+import xml.etree.ElementTree as ET
+from xml.dom import minidom
 
 headers = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.3 Safari/605.1.15",
@@ -32,6 +34,39 @@ MEDIA_EXTENSIONS = {
     '.mkv', '.webm', '.m4v', '.mpg', '.mpeg',
     '.3gp', '.3g2'
 }
+
+def generate_sitemap(urls):
+    """
+    Generate XML sitemap from the list of URLs
+    """
+    # Create the root element
+    urlset = ET.Element('urlset')
+    urlset.set('xmlns', 'http://www.sitemaps.org/schemas/sitemap/0.9')
+    
+    # Add each URL to the sitemap
+    for url in urls:
+        url_element = ET.SubElement(urlset, 'url')
+        loc = ET.SubElement(url_element, 'loc')
+        loc.text = url
+        
+        # Add lastmod element with current date
+        lastmod = ET.SubElement(url_element, 'lastmod')
+        lastmod.text = datetime.utcnow().strftime('%Y-%m-%d')
+        
+        # Add changefreq element (set to monthly by default)
+        changefreq = ET.SubElement(url_element, 'changefreq')
+        changefreq.text = 'monthly'
+        
+        # Add priority element (set to 0.5 by default)
+        priority = ET.SubElement(url_element, 'priority')
+        priority.text = '0.5'
+    
+    # Convert to string with pretty printing
+    xml_str = minidom.parseString(ET.tostring(urlset)).toprettyxml(indent="  ")
+    
+    # Write to file
+    with open('sitemap.xml', 'w', encoding='utf-8') as f:
+        f.write(xml_str)
 
 def validate_url(url, base_url):
     """
@@ -141,10 +176,18 @@ def crawl(start_url):
         print(f"Remaining links to visit: {len(to_visit)}")
         print("-" * 30)
 
+    # Get all URLs from database
+    all_entries = read_entries()
+    
+    # Generate sitemap from URLs
+    urls = [entry[1] for entry in all_entries]  # Assuming URL is the second column
+    generate_sitemap(urls)
+
     # Print summary
     print("\nCrawl Summary:")
     print("-" * 50)
-    print(f"Total URLs saved in database: {len(read_entries())}")
+    print(f"Total URLs saved in database: {len(all_entries)}")
+    print(f"Sitemap generated: sitemap.xml")
 
     close_connection()
 
